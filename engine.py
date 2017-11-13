@@ -103,7 +103,6 @@ class Space:
             else:
                 print("unrecognized command")
         print("\n" * 100)
-        print("Thank you for using physiics")
 
 space = Space()
 space.prompt()
