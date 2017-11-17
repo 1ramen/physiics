@@ -1,30 +1,98 @@
 import math
-from time import sleep
+
+class Physics:
+    """Static class with methods for easier computation"""
+    @staticmethod
+    def clamp(value, mini=None, maxi=None):
+        """Clamp a value into a given range"""
+        # ensure that all values are defined
+        if mini is None:
+            mini = value
+        if max is None:
+            maxi = value
+
+        # clamp n based on min and max
+        if int(value) < int(mini):
+            return int(mini)
+        elif int(value) > int(maxi):
+            return int(maxi)
+        return int(value)
+
 
 class Vector:
-    def __init__(self, x=0, y=0):
-        self.x = x
-        self.y = y
+    """XY pair for calculating motion"""
+    def __init__(self, x=0, y=None):
+        if y is None:
+            y = x
+        self.x = int(x)
+        self.y = int(y)
+
+    def length(self):
+        return math.sqrt(self.x ** 2, self.y ** 2)
 
     def __str__(self):
         return "({}, {})".format(self.x, self.y)
 
-    def length(self):
-        return math.sqrt(self.x**2, self.y**2)
+    def __add__(self, other):
+        return Vector(self.x + other.x, self.y + other.y)
 
-class Thing:
-    def __init__(self, vel=Vector(), pos=Vector(), mass=0, symbol='.'):
-        # setup other properties
-        self.vel = vel
-        self.pos = pos
+    def __sub__(self, other):
+        return Vector(self.x - other.x, self.y - other.y)
+
+    def __mul__(self, other):
+        return Vector(self.x * other.x, self.y * other.y)
+
+    def __truediv__(self, other):
+        return Vector(self.x / other.x, self.y / other.y)
+
+    def __floordiv__(self, other):
+        return Vector(self.x // other.x, self.y // other.y)
+
+    def __iadd__(self, other):
+        self.x += other.x
+        self.y += other.y
+
+    def __neg__(self):
+        return Vector(0 - self.x, 0 - self.y)
+
+    def __invert__(self):
+        return Vector(self.y, self.x)
+
+
+class Obj:
+    """Object in space"""
+    def __init__(self, velocity=Vector(), mass=0, symbol='.'):
+        self.velocity = velocity
         self.mass = mass
-        self.object = object
         self.symbol = symbol
 
     def __str__(self):
-        return "[({},{})({},{}),{},{}]".format(self.pos.x,self.pos.y,self.vel.x,self.vel.y,self.mass,self.symbol)
+        return "<{}, {}, '{}'>".format(self.velocity.__str__(), self.mass, self.symbol)
 
-    def move(self):
-        return Vector(self.pos.x+self.vel.x, self.pos.y+self.vel.y)
+    def acc(self, acceleration=Vector()):
+        """Accelerate the object by a given ammount"""
+        # if there is no second term assume that the first applies to both
+        if acceleration.y is None:
+            acceleration.y = acceleration.x
 
-class Space:
+        # pull value to zero
+        if self.velocity.x > 0:
+            self.velocity.x = Physics.clamp(self.velocity.x + int(acceleration.x), mini=0)
+            self.velocity.y = Physics.clamp(self.velocity.y + int(acceleration.y), mini=0)
+            return
+        elif self.velocity.x < 0:
+            self.velocity.x = Physics.clamp(self.velocity.x - int(acceleration.x), maxi=0)
+            self.velocity.y = Physics.clamp(self.velocity.y - int(acceleration.y), maxi=0)
+            return
+
+        # return 0 because the value cannot go up or down
+        return 0
+
+    def update(self, drag=0, friction=Vector(), gravity=0):
+        """Update the object's velocity based on environment values"""
+        # increase friction with air drag
+        friction.move(drag)
+
+        # apply gravity and friction
+        self.velocity.y -= int(gravity)
+        self.acc(Vector(friction.x, friction.y).negate())
