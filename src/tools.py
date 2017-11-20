@@ -3,24 +3,6 @@
 import math
 from engineio import *
 
-class Physics:
-    """Static class with methods for easier computation"""
-    @staticmethod
-    def clamp(value, mini=None, maxi=None):
-        """Clamp a value into a given range"""
-        # ensure that all values are defined
-        if mini is None:
-            mini = value
-        if max is None:
-            maxi = value
-
-        # clamp n based on min and max
-        if int(value) < int(mini):
-            return int(mini)
-        elif int(value) > int(maxi):
-            return int(maxi)
-        return int(value)
-
 class Vector:
     """XY pair for calculating motion"""
     def __init__(self, x=0, y=None):
@@ -32,7 +14,7 @@ class Vector:
     def length(self):
         """Return vector length"""
         # use pythagorean theorem to calculate the overall length
-        return math.sqrt(self.x ** 2, self.y ** 2)
+        return math.sqrt(self.x ** 2 + self.y ** 2)
 
     def reset(self):
         """Clear the Vector"""
@@ -71,7 +53,7 @@ class Vector:
         return Vector(self.y, self.x)
 
 
-class Thing:
+class Item:
     """Object in space"""
     def __init__(self, velocity=Vector(), mass=0, symbol=' '):
         self.velocity = velocity
@@ -81,21 +63,31 @@ class Thing:
     def __str__(self):
         return "<{}, {}, '{}'>".format(self.velocity.__str__(), self.mass, self.symbol)
 
-    def acc(self, acceleration=Vector()):
+    def accelerate(self, acceleration: Vector) -> Vector:
         """Accelerate the object by a given ammount"""
         # if there is no second term assume that the first applies to both
         if acceleration.y is None:
             acceleration.y = acceleration.x
 
-        # pull value to zero
+        # update the velocity ensuring that if it is decelerating, it doesn't go below zero
         if self.velocity.x > 0:
-            self.velocity.x = Physics.clamp(self.velocity.x + acceleration.x, mini=0)
-            self.velocity.y = Physics.clamp(self.velocity.y + acceleration.y, mini=0)
-            return self.velocity
+            self.velocity.x = max(self.velocity.x + acceleration.x, 0)
         elif self.velocity.x < 0:
-            self.velocity.x = Physics.clamp(self.velocity.x - acceleration.x, maxi=0)
-            self.velocity.y = Physics.clamp(self.velocity.y - acceleration.y, maxi=0)
-            return self.velocity
+            self.velocity.x = min(self.velocity.x - acceleration.x, 0)
 
-        # return 0 because the value cannot go up or down
-        return 0
+        if self.velocity.y > 0:
+            self.velocity.y = max(self.velocity.y + acceleration.y, 0)
+        elif self.velocity.x > 0:
+            self.velocity.y = min(self.velocity.y - acceleration.y, 0)
+
+        # return the updated velocity
+        return self.velocity
+
+    def gravity(self, gravity: int) -> None:
+        """Apply given gravitaional constant to Item"""
+        self.velocity.y -= gravity
+
+    def move(self, pos: Vector) -> Vector:
+        """Calculate the new position of a point using the given Item's velocity"""
+        print("MOVE: {} + {} = {}".format(pos, self.velocity, pos + self.velocity))
+        return pos + self.velocity

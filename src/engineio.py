@@ -4,12 +4,12 @@ from termcolor import colored
 class IO:
     """Static class for handling IO"""
     @staticmethod
-    def clear():
+    def clear() -> None:
         """Clear the screen"""
         print("\n" * 100)
 
     @staticmethod
-    def cprint(text, color):
+    def cprint(text, color: str) -> None:
         """Print colored text"""
         print(colored(text, color))
 
