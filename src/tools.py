@@ -16,7 +16,7 @@ class Vector:
         # use pythagorean theorem to calculate the overall length
         return math.sqrt(self.x ** 2 + self.y ** 2)
 
-    def reset(self):
+    def zero(self):
         """Clear the Vector"""
         # set the vector to a default value and return it
         self = Vector()
@@ -32,7 +32,10 @@ class Vector:
         return Vector(self.x - other.x, self.y - other.y)
 
     def __mul__(self, other):
-        return Vector(self.x * other.x, self.y * other.y)
+        try:
+            return Vector(self.x * other.x, self.y * other.y)
+        except:
+            return Vector(self.x * other, self.y * other)
 
     def __truediv__(self, other):
         return Vector(self.x / other.x, self.y / other.y)
@@ -55,13 +58,19 @@ class Vector:
 
 class Item:
     """Object in space"""
+
     def __init__(self, velocity=Vector(), mass=0, symbol=' '):
         self.velocity = velocity
         self.mass = mass
         self.symbol = symbol
+        self.moved = False
 
     def __str__(self):
         return "<{}, {}, '{}'>".format(self.velocity.__str__(), self.mass, self.symbol)
+
+    def momentum(self) -> int:
+        """Calculate the momentum of the item"""
+        return self.velocity.length() * self.mass
 
     def accelerate(self, acceleration: Vector) -> Vector:
         """Accelerate the object by a given ammount"""
@@ -77,7 +86,7 @@ class Item:
 
         if self.velocity.y > 0:
             self.velocity.y = max(self.velocity.y + acceleration.y, 0)
-        elif self.velocity.x > 0:
+        elif self.velocity.y < 0:
             self.velocity.y = min(self.velocity.y - acceleration.y, 0)
 
         # return the updated velocity
@@ -85,9 +94,10 @@ class Item:
 
     def gravity(self, gravity: int) -> None:
         """Apply given gravitaional constant to Item"""
-        self.velocity.y -= gravity
+        if self.mass != 0:
+            self.velocity.y += gravity
 
     def move(self, pos: Vector) -> Vector:
         """Calculate the new position of a point using the given Item's velocity"""
-        print("MOVE: {} + {} = {}".format(pos, self.velocity, pos + self.velocity))
+        #print("{} + {} = {}".format(pos, self.velocity, pos + self.velocity))
         return pos + self.velocity
